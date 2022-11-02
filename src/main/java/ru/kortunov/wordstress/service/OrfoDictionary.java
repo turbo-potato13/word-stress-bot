@@ -1,4 +1,4 @@
-package ru.kortunov.wordstress.util;
+package ru.kortunov.wordstress.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.cos.COSDocument;
@@ -7,7 +7,7 @@ import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,17 +15,18 @@ import java.util.Arrays;
 import java.util.Optional;
 
 @Slf4j
-@Component
+@Service
 public class OrfoDictionary implements Dictionary {
 
+    private String parsedText;
     @Value("${orfo.dictionary.path}")
     private String orfoPdfPath;
 
     @Override
     public String read() {
-        File f = new File(orfoPdfPath);
+        File file = new File(orfoPdfPath);
         try {
-            var parser = new PDFParser(new RandomAccessFile(f, "r"));
+            var parser = new PDFParser(new RandomAccessFile(file, "r"));
             parser.parse();
             try (COSDocument cosDoc = parser.getDocument()) {
                 PDFTextStripper pdfStripper = new PDFTextStripper();
@@ -40,9 +41,8 @@ public class OrfoDictionary implements Dictionary {
 
     @Override
     public Optional<String> search(String searchWord) {
-        var parsedText = read();
         if (parsedText == null) {
-            return Optional.empty();
+            this.parsedText = read();
         }
         return Arrays.stream(parsedText.split("\n"))
                 .map(String::trim)
