@@ -1,4 +1,4 @@
-package ru.kortunov.wordstress.util;
+package ru.kortunov.wordstress.service;
 
 import java.util.Optional;
 
