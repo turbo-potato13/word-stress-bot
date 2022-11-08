@@ -1,57 +1,60 @@
 package ru.kortunov.wordstress.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.cos.COSDocument;
-import org.apache.pdfbox.io.RandomAccessFile;
-import org.apache.pdfbox.pdfparser.PDFParser;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.kortunov.wordstress.dto.TelegramCommand;
 
-import java.io.File;
+import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.Arrays;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 @Service
 public class OrfoDictionary implements Dictionary {
 
-    private String parsedText;
-    @Value("${orfo.dictionary.path}")
-    private String orfoPdfPath;
+    private final List<String> parsedTextOrfoEGE = new ArrayList<>();
+    private final List<String> parsedTextOrfoAll = new ArrayList<>();
+    @Value("${orfo.dictionary.ege.path}")
+    private String orfoEgePath;
+    @Value("${orfo.dictionary.all.path}")
+    private String orfoAllPath;
 
-    @Override
-    public String read() {
-        File file = new File(orfoPdfPath);
+    @PostConstruct
+    public void init() {
         try {
-            var parser = new PDFParser(new RandomAccessFile(file, "r"));
-            parser.parse();
-            try (COSDocument cosDoc = parser.getDocument()) {
-                PDFTextStripper pdfStripper = new PDFTextStripper();
-                PDDocument pdDoc = new PDDocument(cosDoc);
-                return pdfStripper.getText(pdDoc);
-            }
+            parsedTextOrfoAll.addAll(Files.readAllLines(Paths.get(orfoAllPath)));
+            parsedTextOrfoEGE.addAll(Files.readAllLines(Paths.get(orfoEgePath)));
         } catch (IOException e) {
             log.error(e.getMessage());
         }
-        return null;
     }
 
     @Override
-    public Optional<String> search(String searchWord) {
-        if (parsedText == null) {
-            this.parsedText = read();
+    public Optional<String> search(String searchWord, TelegramCommand command) {
+        StringBuilder result = new StringBuilder();
+
+        if (command.equals(TelegramCommand.ORFO_EGE)) {
+            parsedTextOrfoEGE.stream()
+                    .map(String::trim)
+                    .filter(s -> s.toLowerCase().contains(searchWord))
+                    .forEach(s -> result.append(s).append("\n\n"));
+        } else if (command.equals(TelegramCommand.ORFO_ALL)) {
+            parsedTextOrfoAll.stream()
+                    .map(String::trim)
+                    .filter(s -> s.toLowerCase().contains(searchWord))
+                    .forEach(s -> result.append(s).append("\n\n"));
         }
-        return Arrays.stream(parsedText.split("\n"))
-                .map(String::trim)
-                .filter(s -> s.toLowerCase().contains(searchWord))
-                .findFirst();
+        return result.toString().isEmpty() ? Optional.empty() : Optional.of(result.toString());
     }
 
     @Override
     public String prepareMessage(String message) {
         return message.trim().toLowerCase();
     }
+
 }
