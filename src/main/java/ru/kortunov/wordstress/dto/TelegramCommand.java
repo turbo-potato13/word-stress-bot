@@ -4,7 +4,7 @@ public enum TelegramCommand {
     START("/start"),
     HELP("/help"),
     ORFO_EGE("Словарь ударений для ЕГЭ"),
-    ORFO_ALL("Полный словаь ударений (beta)");
+    ORFO_ALL("Полный словарь ударений (beta)");
 
     private final String value;
 
