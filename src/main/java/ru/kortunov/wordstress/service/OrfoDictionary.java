@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,8 +18,8 @@ import java.util.Optional;
 @Service
 public class OrfoDictionary implements Dictionary {
 
-    private final List<String> parsedTextOrfoEGE = new ArrayList<>();
-    private final List<String> parsedTextOrfoAll = new ArrayList<>();
+    private final HashSet<String> parsedTextOrfoEGE = new HashSet<>();
+    private final HashSet<String> parsedTextOrfoAll = new HashSet<>();
     @Value("${orfo.dictionary.ege.path}")
     private String orfoEgePath;
     @Value("${orfo.dictionary.all.path}")
